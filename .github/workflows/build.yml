@@ -9,24 +9,26 @@ jobs:
   build:
     name: Compila .nds con devkitARM
     runs-on: ubuntu-latest
-    container:
-      image: devkitpro/devkitarm:latest
 
     steps:
       - name: Checkout codice sorgente
         uses: actions/checkout@v4
 
-      - name: Installa librerie NDS
+      - name: Installa devkitPRO
         run: |
-          dkp-pacman --noconfirm -Syu
-          dkp-pacman --noconfirm -S nds-dev devkitARM libfat-nds libnds
-          arm-none-eabi-gcc --version
+          sudo apt-get update -y
+          sudo apt-get install -y wget
+          wget -U "dkp-apt" https://apt.devkitpro.org/install-devkitpro-pacman -O /tmp/install-dkp.sh
+          chmod +x /tmp/install-dkp.sh
+          sudo /tmp/install-dkp.sh
+          sudo dkp-pacman --noconfirm -S nds-dev
 
-      - name: Configura environment devkitPRO
+      - name: Configura variabili devkitPRO
         run: |
-          echo "DEVKITPRO=/opt/devkitpro" >> $GITHUB_ENV
+          echo "DEVKITPRO=/opt/devkitpro"           >> $GITHUB_ENV
           echo "DEVKITARM=/opt/devkitpro/devkitARM" >> $GITHUB_ENV
-          echo "PATH=/opt/devkitpro/tools/bin:/opt/devkitpro/devkitARM/bin:$PATH" >> $GITHUB_ENV
+          echo "/opt/devkitpro/tools/bin"           >> $GITHUB_PATH
+          echo "/opt/devkitpro/devkitARM/bin"       >> $GITHUB_PATH
 
       - name: Compila NDS Texture Editor
         run: |
@@ -34,20 +36,10 @@ jobs:
           export DEVKITARM=/opt/devkitpro/devkitARM
           export PATH=/opt/devkitpro/tools/bin:/opt/devkitpro/devkitARM/bin:$PATH
           make clean || true
-          make -j$(nproc) V=1
+          make -j$(nproc)
           ls -lh *.nds
 
-      - name: Verifica file .nds
-        run: |
-          if [ -f "nds_texture_editor.nds" ]; then
-            echo "✅ BUILD OK! $(du -sh nds_texture_editor.nds)"
-          else
-            echo "❌ ERRORE: .nds non trovato!"
-            ls -la
-            exit 1
-          fi
-
-      - name: Pubblica .nds come Artifact
+      - name: Pubblica nds_texture_editor.nds
         uses: actions/upload-artifact@v4
         with:
           name: nds_texture_editor
