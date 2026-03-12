@@ -1,0 +1,287 @@
+# NDS TEXTURE EDITOR - GUIDA COMPLETA
+# Ispirato a NitroEdit by XorTroll
+# =====================================================================
+
+## INTRODUZIONE
+
+NDS Texture Editor è un'applicazione homebrew per Nintendo DS che permette
+di visualizzare e modificare le texture contenute nei file .nds (ROM di giochi NDS).
+
+Funzionalità principali:
+  - File browser: sfoglia file .nds dalla scheda SD/R4
+  - NitroFS browser: esplora il filesystem interno del gioco
+  - Texture scanner: trova automaticamente NCGR, NARC, NSBMD, NSBTX
+  - Texture viewer: visualizza le texture con zoom e pan
+  - Pixel editor: modifica i singoli pixel con zoom fino a 8x
+  - Palette editor: modifica i colori della palette RGB
+  - Salvataggio: riscrive la texture modificata nel file .nds
+
+Compatibile con: R4 DS, R4i Gold, Acekard 2i, SuperCard DSTwo,
+                 R4 SDHC, Cyclo DS, TTDS, e altri flashcard con libfat
+
+=======================================================================
+## PARTE 1: INSTALLAZIONE devkitPRO (necessaria per compilare)
+=======================================================================
+
+### WINDOWS:
+1. Scarica l'installer da: https://devkitpro.org/wiki/Getting_Started
+2. Esegui l'installer: devkitProUpdater-3.x.x.exe
+3. Seleziona "NDS Development" durante l'installazione
+4. Al termine, apri il terminale MSYS2 (installato da devkitPRO)
+5. Installa le librerie NDS:
+   pacman -S nds-dev
+
+6. Verifica installazione:
+   arm-none-eabi-gcc --version
+   (deve mostrare versione del compilatore ARM)
+
+### LINUX (Ubuntu/Debian):
+1. Aggiungi repository devkitPRO:
+   wget https://apt.devkitpro.org/install-devkitpro-pacman
+   chmod +x ./install-devkitpro-pacman
+   sudo ./install-devkitpro-pacman
+
+2. Installa toolchain ARM:
+   sudo dkp-pacman -S nds-dev
+
+3. Configura variabili d'ambiente (aggiungi al tuo .bashrc o .zshrc):
+   export DEVKITPRO=/opt/devkitpro
+   export DEVKITARM=/opt/devkitpro/devkitARM
+   export PATH=$PATH:$DEVKITPRO/tools/bin:$DEVKITARM/bin
+
+4. Ricarica shell: source ~/.bashrc
+
+### macOS:
+1. Installa Homebrew: https://brew.sh
+2. Aggiungi tap devkitPRO:
+   brew tap devkitPRO/devkitpro
+   brew install devkitpro-pacman
+
+3. Installa NDS dev:
+   sudo dkp-pacman -S nds-dev
+
+4. Configura environment:
+   export DEVKITPRO=/opt/devkitpro
+   export DEVKITARM=/opt/devkitpro/devkitARM
+
+=======================================================================
+## PARTE 2: COMPILAZIONE DEL PROGETTO
+=======================================================================
+
+1. Apri il terminale (MSYS2 su Windows, Terminale su Linux/Mac)
+
+2. Naviga nella directory del progetto:
+   cd /percorso/a/nds_texture_editor/
+
+3. Compila:
+   make
+
+4. Se tutto va bene, vedrai:
+   ╔══════════════════════════════════╗
+   ║  NDS Texture Editor compilato!   ║
+   ║  File: nds_texture_editor.nds    ║
+   ╚══════════════════════════════════╝
+
+5. Il file nds_texture_editor.nds è pronto!
+
+### Errori comuni:
+
+ERRORE: "DEVKITPRO not set"
+SOLUZIONE: Esporta la variabile:
+  export DEVKITPRO=/opt/devkitpro
+  export DEVKITARM=/opt/devkitpro/devkitARM
+
+ERRORE: "arm-none-eabi-gcc: command not found"
+SOLUZIONE: Aggiungi devkitARM al PATH:
+  export PATH=$PATH:/opt/devkitpro/devkitARM/bin
+
+ERRORE: "cannot find -lfat"
+SOLUZIONE: Installa libfat:
+  sudo dkp-pacman -S libfat-nds
+
+ERRORE: "cannot find -lnds9"
+SOLUZIONE: Installa libnds:
+  sudo dkp-pacman -S libnds
+
+=======================================================================
+## PARTE 3: INSTALLAZIONE SU SCHEDA R4
+=======================================================================
+
+### Metodo standard (tutti i flashcard):
+1. Prendi la scheda microSD dalla tua R4
+2. Inseriscila nel PC con un adattatore microSD
+3. Copia il file nds_texture_editor.nds nella root della scheda:
+   microSD/nds_texture_editor.nds
+   (o in qualsiasi cartella tu voglia)
+4. Reinserisci la microSD nella R4
+5. Accendi il Nintendo DS
+6. Nel menu della R4, naviga fino a nds_texture_editor.nds
+7. Premi A per avviarlo
+
+### Nota DLDI (se l'app non riesce a leggere la SD):
+Alcuni flashcard richiedono il patching DLDI. Usa dlditool:
+
+   dlditool r4tf.dldi nds_texture_editor.nds
+
+I file DLDI (.dldi) per ogni flashcard si trovano su:
+   https://www.chishm.com/DLDI/
+
+File DLDI per i flashcard più comuni:
+  - R4 DS:          r4tf.dldi
+  - R4i Gold:       r4ids.dldi
+  - Acekard 2i:     ak2.dldi
+  - SuperCard DSTwo: scds2.dldi
+  - TTDS:           ttds.dldi
+
+=======================================================================
+## PARTE 4: UTILIZZO DELL'APP
+=======================================================================
+
+### NAVIGAZIONE GENERALE:
+  D-Pad Su/Giù   : Naviga lista
+  A               : Conferma / Seleziona
+  B               : Annulla / Torna indietro
+  SELECT          : Info ROM / Info App
+  START           : Salva modifiche
+  Touch (schermo inferiore): Selezione diretta
+
+### SCHERMO 1 - FILE BROWSER:
+  - All'avvio vedi i file .nds sulla tua scheda SD
+  - Naviga con D-Pad Su/Giù
+  - A per aprire un file .nds o entrare in una cartella
+  - B per tornare alla cartella padre
+  - Le directory sono mostrate come [nome]
+  - I file .nds sono marcati con *
+
+### SCHERMO 2 - NitroFS BROWSER:
+  - Mostra i file interni del gioco NDS
+  - A: Scansiona e trova le texture automaticamente
+  - B: Torna al file browser
+  - SELECT: Mostra info dettagliate della ROM
+
+### SCHERMO 3 - LISTA TEXTURE:
+  - Mostra tutte le texture trovate con formato e dimensioni
+  - A: Apri texture viewer
+  - X: Carica la texture in memoria
+  - Y: Salva tutte le texture modificate
+  - B: Torna al NitroFS browser
+
+### SCHERMO 4 - TEXTURE VIEWER:
+  - Schermo superiore: visualizza la texture
+  - D-Pad: muovi la vista (pan)
+  - L/R: zoom -/+  (da 1x a 8x)
+  - A: Entra nel Pixel Editor
+  - X: Carica/ricarica texture
+  - Y: Palette Editor
+  - B: Torna alla lista texture
+
+### SCHERMO 5 - PIXEL EDITOR:
+  - Schermo superiore: canvas di editing con zoom
+  - Schermo inferiore: palette colori selezionabile
+  - D-Pad: muovi il cursore pixel
+  - A: Disegna pixel con il colore selezionato
+  - L/R: zoom canvas
+  - X: Apri dialogo salvataggio
+  - Y: Palette Editor
+  - B: Torna al viewer
+  - Touch schermo inferiore: seleziona colore palette
+
+### SCHERMO 6 - PALETTE EDITOR:
+  - Schermo superiore: griglia completa 16x16 palette
+  - Schermo inferiore: slider R/G/B per modificare colore
+  - D-Pad: muovi cursore selezione colore
+  - Touch slider: modifica valore canale R/G/B
+  - A: Applica modifica colore
+  - B: Annulla e torna al pixel editor
+  - X: Salva modifiche
+
+### SALVATAGGIO:
+  !! ATTENZIONE: Il salvataggio è PERMANENTE e irreversibile !!
+  !! Fai sempre un backup della ROM prima di modificarla !!
+
+  Il file .nds viene modificato direttamente sulla scheda SD.
+  La texture viene riscritta nella posizione originale del file.
+
+=======================================================================
+## PARTE 5: FORMATI TEXTURE SUPPORTATI
+=======================================================================
+
+NCGR (Character Graphic Resource):
+  - Formato standard NDS per sprite 2D
+  - 4 o 8 bit per pixel con palette
+  - Usato da quasi tutti i giochi NDS
+
+NCLR (Color Resource):
+  - File palette associato agli NCGR
+  - Colori BGR15 (5bit per canale)
+
+NARC (Nintendo ARChive):
+  - Archivio che contiene altri file
+  - Spesso contiene multipli NCGR + NCLR
+
+NSBMD (Nitro System Binary MoDel):
+  - Modelli 3D con texture embedded
+  - Texture in formato Direct (16bit)
+
+NSBTX (Nitro System Binary TeXture):
+  - Pack di texture per modelli 3D
+  - Formati multipli: A3I5, A5I3, 16col, 256col, Direct
+
+Formati pixel supportati:
+  TEX_4COLOR   (2bpp) - 4 colori da palette
+  TEX_16COLOR  (4bpp) - 16 colori da palette
+  TEX_256COLOR (8bpp) - 256 colori da palette
+  TEX_A3I5     (8bpp) - 8 colori + 8 livelli alpha
+  TEX_A5I3     (8bpp) - 8 colori + 32 livelli alpha
+  TEX_DIRECT   (16bpp)- Colori diretti BGR15
+
+=======================================================================
+## PARTE 6: STRUTTURA DIRECTORY PROGETTO
+=======================================================================
+
+nds_texture_editor/
+  ├── Makefile              <- File di build per devkitARM
+  ├── GUIDA_COMPILAZIONE.txt <- Questa guida
+  ├── source/
+  │   ├── main.c            <- Main loop + gestione input
+  │   ├── nds_parser.c      <- Parser NDS ROM + NitroFS
+  │   ├── tex_decoder.c     <- Decoder/Encoder texture NDS
+  │   └── ui.c              <- UI Renderer + font 5x8
+  ├── include/
+  │   ├── nds_types.h       <- Strutture dati e costanti
+  │   ├── nds_parser.h      <- Interfaccia parser
+  │   ├── tex_decoder.h     <- Interfaccia decoder
+  │   └── ui.h              <- Interfaccia UI
+  ├── data/                 <- Dati binari embeddati (vuota)
+  ├── gfx/                  <- Grafica NDS (vuota)
+  └── build/                <- Generata automaticamente da make
+
+=======================================================================
+## PARTE 7: NOTE TECNICHE
+=======================================================================
+
+Memoria:
+  Il DS ha 4MB di RAM. Il progetto è ottimizzato per:
+  - Caricare una texture alla volta in memoria
+  - Dimensione massima texture: 128x128 pixel
+  - Buffer raw: max 512KB per file
+
+Limitazioni:
+  - Non supporta texture COMP4X4 (formato compresso NDS3D)
+  - NARC annidati mostrati come entry singola
+  - La palette viene generata automaticamente se non trovata nel file
+
+Compatibilità giochi:
+  Testato concettualmente su giochi che usano:
+  - NitroFS standard
+  - NCGR/NCLR per sprite 2D
+  - NSBMD/NSBTX per 3D
+
+Per aiuto e aggiornamenti visita:
+  https://github.com/devkitPro/libnds
+  https://github.com/XorTroll/NitroEdit (progetto originale di ispirazione)
+
+=======================================================================
+NDS Texture Editor v1.0 - Homebrew NDS per R4
+Ispirato a NitroEdit by XorTroll
+=======================================================================
