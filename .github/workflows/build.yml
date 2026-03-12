@@ -1,0 +1,56 @@
+name: Build NDS Homebrew
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Compila .nds con devkitARM
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:latest
+
+    steps:
+      - name: Checkout codice sorgente
+        uses: actions/checkout@v4
+
+      - name: Installa librerie NDS
+        run: |
+          dkp-pacman --noconfirm -Syu
+          dkp-pacman --noconfirm -S nds-dev devkitARM libfat-nds libnds
+          arm-none-eabi-gcc --version
+
+      - name: Configura environment devkitPRO
+        run: |
+          echo "DEVKITPRO=/opt/devkitpro" >> $GITHUB_ENV
+          echo "DEVKITARM=/opt/devkitpro/devkitARM" >> $GITHUB_ENV
+          echo "PATH=/opt/devkitpro/tools/bin:/opt/devkitpro/devkitARM/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Compila NDS Texture Editor
+        run: |
+          export DEVKITPRO=/opt/devkitpro
+          export DEVKITARM=/opt/devkitpro/devkitARM
+          export PATH=/opt/devkitpro/tools/bin:/opt/devkitpro/devkitARM/bin:$PATH
+          make clean || true
+          make -j$(nproc) V=1
+          ls -lh *.nds
+
+      - name: Verifica file .nds
+        run: |
+          if [ -f "nds_texture_editor.nds" ]; then
+            echo "✅ BUILD OK! $(du -sh nds_texture_editor.nds)"
+          else
+            echo "❌ ERRORE: .nds non trovato!"
+            ls -la
+            exit 1
+          fi
+
+      - name: Pubblica .nds come Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nds_texture_editor
+          path: nds_texture_editor.nds
+          retention-days: 90
+          if-no-files-found: error
